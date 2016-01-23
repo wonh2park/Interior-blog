@@ -1,0 +1,143 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+
+<dom-module id="neo-login">
+  <template>
+    <style include="shared-styles">
+      paper-dialog {
+        background-color:white;
+        width:350px;
+        min-width:350px;
+      }
+      paper-button {
+        margin: 5px;
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+      paper-button.facebook {
+        background-color: #4c69ba;
+      }
+      paper-button.google {
+        background-color: #dc4e41;
+      }
+      paper-menu-button {
+        padding:0;
+      }
+      .hide {
+        display: none !important;
+      }
+      .login-container {
+        display: inline-block;
+      }
+      .button-container {
+        text-align: center;
+      }
+      .login-icon {
+        display: inline-block;
+        vertical-align: middle;
+        border: 0;
+      }
+      .google {        
+        background: url('/images/login/google.png') transparent 5px 50% no-repeat;
+        background-size: 28px;
+      }
+      .facebook {
+        background: url('/images/login/facebook.png') transparent 5px 50% no-repeat;
+        background-size: 28px;
+      }
+      .dropdown-content {
+        padding:0;
+      }
+      .dropdown-content paper-item {
+        padding: 0 10px;
+        min-height: 0px;
+        font-size: small;
+        cursor: pointer;
+      }
+      a {
+        text-decoration: none;
+        color: white;
+      }
+    </style>
+    <firebase-auth id="firebaseLogin" 
+      user="{{user}}"
+      status-known="{{statusKnown}}"
+      location="{{location}}" 
+      provider="{{provider}}"
+      on-login="userUpdatedHandler" 
+    </firebase-auth>
+    <div class="login-container">
+      <paper-button class="login" on-tap="openLogin">Log In</paper-button>
+    </div>
+    <div class="logout-container hide">
+      <paper-menu-button id="userProfileMenu">
+        <paper-icon-button id="userIconImage" class="dropdown-trigger" src="[[gravatar]]" alt="Log Out" title="Log Out"></paper-icon-button>
+        <paper-menu class="dropdown-content">
+          <paper-item on-tap="logout">Log Out</paper-item>
+        </paper-menu>
+      </paper-menu-button>
+      <span class="user-email"><a href$="[[user.google.cachedUserProfile.link]]" target="_new">[[user.google.displayName]]</a></span>
+    </div>
+    <paper-dialog id="loginDialog" entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+      <h2 class="login-title">Log In</h2>
+      <div class="button-container">
+        <paper-button id="loginFacebookButton" raised class="facebook" on-tap="loginFacebook" style="width:230px;padding-left:30px;"><span class="login-icon facebook"></span>Sign in with Facebook</paper-button>
+        <paper-button id="loginGoogleButton" raised class="google" on-tap="loginGoogle" style="width:230px;padding-left:30px;"><span class="login-icon google"></span>Sign in with Google</paper-button>
+      </div>
+    </paper-dialog>
+  </template>
+  <script>
+  (function() {
+      'use strict';
+      Polymer({
+        is: 'neo-login',
+        properties: {
+          provider: {
+            type: String,
+            value: 'anonymous'
+          },
+          user: {
+            type: Object,
+            value: null
+          },
+          gravatar: {
+            type: String,
+            value: ''
+          },
+          statusKnown: {
+            type: Boolean
+          },
+          location: {
+            value: function() {
+              return 'https://neochaex.firebaseio.com';
+            }
+          }
+        },
+        openLogin: function() {
+          this.$.loginDialog.resetFit();
+          this.$.loginDialog.open();
+        },
+        login: function(provider) {
+          this.provider = provider;
+          this.$.firebaseLogin.login();
+        },
+        loginGoogle: function() {
+          this.login('google');
+        },
+        logout: function() {
+          this.$.firebaseLogin.logout();
+          this.showLoginContainer(true);
+        },
+        userUpdatedHandler: function() {
+          this.gravatar = this.user.google.profileImageURL;
+          this.$.loginDialog.close();
+          this.showLoginContainer(false);
+        },
+        showLoginContainer: function(show) {
+          this.toggleClass('hide',!show,this.$$('.login-container'));
+          this.toggleClass('hide',show,this.$$('.logout-container'));
+        }
+      });
+    })();
+  </script>
+</dom-module>
